@@ -26,6 +26,7 @@ set.seed(2008)
 ```{r, message=FALSE, warning=FALSE}
 # Loading in the necessary libraries
 library(tidyverse)
+library(rvest)
 
  # Package and settings for pretty-printing tables
 library(gridExtra)
@@ -38,11 +39,33 @@ library(boot)
 ```
 
 ```{r, message=FALSE, warning=FALSE}
-# Loading in the necessary datasets
-bat_df_raw <- read_csv("../Data/war_daily_bat.csv") # Baseball-Reference position player WAR table
-head(bat_df_raw)
+# Function for scraping Baseball-Reference's batter and pitcher WAR datasets
+bref_war_scraper <- function(scrape_bat) {
+  
+    url <- str_c("https://www.baseball-reference.com/data/war_daily_",
+                 ifelse(scrape_bat, "bat", "pitch"),
+                 ".txt")
+    
+    # Scraping data
+    data_string <- url %>%
+        read_html %>% # reading page as HTML
+        html_elements("p") %>% # navigating to the table
+        html_text # creating csv as a string
+  
+    read.csv(text = data_string) %>%
+        as_tibble()
+}
+```
 
-pit_df_raw <- read_csv("../Data/war_daily_pitch.csv") # Baseball-Reference pitcher WAR table
+```{r}
+ # Baseball-Reference position player WAR table
+bat_df_raw <- bref_war_scraper(scrape_bat = TRUE)
+head(bat_df_raw)
+```
+
+```{r}
+# Baseball-Reference pitcher WAR table
+pit_df_raw <- bref_war_scraper(scrape_bat = FALSE)
 head(pit_df_raw)
 ```
 
